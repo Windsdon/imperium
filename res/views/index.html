@@ -1,0 +1,68 @@
+<% extends "template.html" %>
+
+<% block title %>Imperium<% endblock %>
+
+<% block headerScripts %>
+    <script type="text/javascript" src="/javascripts/lobby.js"></script>
+<% endblock %>
+
+<% block content %>
+<div class="container">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="page-header">
+              <h1>Rooms</h1>
+            </div>
+            <div style="text-align: center">
+                <div class="btn-group btn-group-sm">
+                    <a class="btn btn-success" href="create">Create Room</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="page-header">
+              <h1>How to play</h1>
+            </div>
+            <p>
+                Imperium is a game for 2-4 players. Your objective is to move your
+                king to the golden square in the middle.
+                The players are assigned a random color, and take turns to make moves,
+                following the order: Red, Green, Blue, Yellow.
+            </p>
+            <p>
+                There are three unity types: King, Thief and Warrior.
+            </p>
+            <h3>Notation</h3>
+            <p>
+                While playing, the game will display the moves in this notation:
+            </p>
+            <p>
+                <b>Normal moves:</b> <code>c3d2</code><br>
+                <b>Captures:</b> <code>c3d2!</code><br>
+                <b>Power moves:</b> <code>e4e5*a2$e3+</code> (move to, kill, create tree)<br>
+                <b>Power moves (with capture):</b> <code>e4e5!*a2$e3+</code> (capture, kill, create tree)<br>
+                <b>Elimination:</b> <code>c3d2!-</code><br>
+                <b>Win:</b> <code>e4e5#</code><br>
+            </p>
+            <p>
+                This is the full board state notation: <code>@a1:k1 @a2:t1 @b2:w1 @d3+ @e8+</code><br>
+            </p>
+            <p>
+
+                The first three describe unit location: k = king, t = thief, w = warrior, followed by the unit's owner (1-based).
+                Next is a list of trees.
+            </p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            Based on a Minecraft map by
+            <a href="http://www.minecraftforum.net/forums/mapping-and-modding/maps/2699412-imperium-a-2-4-players-chess-like-minigame">
+                Pollieboy and Vilder50
+            </a>
+        </div>
+    </div>
+</div>
+<% endblock %>

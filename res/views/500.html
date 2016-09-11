@@ -1,0 +1,13 @@
+<% extends "template.html" %>
+
+<% block title %>500 - Internal Server Error<% endblock %>
+
+<% block content %>
+<div class="container">
+    <div class="jumbotron">
+        <h1>500 - Internal Server Error</h1>
+        <p>Oh no!</p>
+        <pre><$ error.stack $></pre>
+    </div>
+</div>
+<% endblock %>

@@ -1,0 +1,145 @@
+html {
+    position: relative;
+    min-height: 100%;
+}
+body {
+    margin-bottom: 80px;
+}
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 60px;
+    background-color: #f5f5f5;
+    padding-top: 20px;
+    line-height: 20px;
+}
+
+.moves {
+    max-height: 600px;
+    overflow-y: auto;
+    font-family: 'VT323', monospace;
+    line-height: 20px;
+    font-size: 16pt;
+}
+.list-group-item.future {
+    color: #ccc;
+}
+.game-field {
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+}
+
+.game-cell {
+    width: 11.1111%;
+    height: 11.1111%;
+    background-color: #000;
+    float: left;
+    margin: 0;
+    padding: 0;
+    position: relative;
+}
+
+.game-cell.color-even {
+    background-color: #009933;
+}
+
+.game-cell.color-odd {
+    background-color: #33aa33;
+}
+
+.game-cell.faded {
+    opacity: 0.5;
+}
+
+.game-cell .coords {
+    font-family: 'VT323', monospace;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    line-height: 30px;
+    font-size: 15pt;
+    position: absolute;
+}
+
+.game-cell .fullsize {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.game-cell .nodrag {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.game-cell .fullsize img {
+    position: absolute;
+    width: 70%;
+    height: 70%;
+    margin: 15%;
+}
+
+.game-cell .fullsize.terrain img {
+    position: absolute;
+    image-rendering: pixelated;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.game-cell .no-power-overlay {
+    position: absolute;
+    width: 70%;
+    height: 70%;
+    margin: 15%;
+}
+
+.move-up {
+    transform: rotate(-90deg);
+}
+
+.move-down {
+    transform: rotate(90deg);
+}
+
+.move-left {
+    transform: rotate(180deg);
+}
+
+.move-right {
+    transform: rotate(0deg);
+}
+
+.move-up-right {
+    transform: rotate(-45deg);
+}
+
+.move-up-left {
+    transform: rotate(225deg);
+}
+
+.move-down-right {
+    transform: rotate(45deg);
+}
+
+.move-down-left {
+    transform: rotate(-225deg);
+}
+
+.bottom-moves {
+    font-family: monospace;
+}
+
+.player-dead {
+    text-decoration: line-through;
+    font-weight: normal;
+}
+
+.player-muted {
+    background-color: #eee;
+}

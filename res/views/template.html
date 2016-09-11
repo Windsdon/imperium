@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html ng-app="imperium">
+
+<head>
+    <meta charset="utf-8">
+    <title><% block title %><% endblock %></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css?family=VT323" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.12.0/jquery-ui.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <% block headerScripts %><% endblock %>
+</head>
+
+<body>
+    <nav class="navbar navbar-default" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="/">Imperium</a>
+            </div>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <% block nav %><% endblock %>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <% block content %><% endblock %>
+    <footer class="footer">
+      <div class="container">
+          <p>
+              Imperium 0.1.0 - By <a href="https://github.com/Windsdon">Windsdon</a>. <a href="https://github.com/Windsdon/imperium">Source Code</a>
+          </p>
+      </div>
+    </footer>
+</body>
+</html>

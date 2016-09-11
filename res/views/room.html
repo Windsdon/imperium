@@ -1,0 +1,71 @@
+<% extends "template.html" %>
+
+<% block title %>Imperium<% endblock %>
+
+<% block headerScripts %>
+    <script type="text/javascript" src="/javascripts/room.js"></script>
+<% endblock %>
+
+<% block nav %>
+    <li><a>Room #<$ roomID $></a></li>
+<% endblock %>
+
+<% block content %>
+<div class="container" ng-controller="GameField as game">
+    <div class="row">
+        <div class="col-md-10 game-field">
+            <div class="game-cell" id="cell-{{cell.position}}" ng-repeat="cell in game.cells" ng-class="{
+                'faded': cell.faded,
+                'droppable': cell.validDrop
+            }" ng-class-even="'color-even'" ng-class-odd="'color-odd'" ng-mouseover="game.mouseOver(cell.position)"
+            ng-click="game.handleClick(cell.position)" data-pos="{{cell.position}}">
+                <div class="terrain fullsize">
+                    <img ng-if="cell.terrain" ng-src="/images/terrain/{{cell.terrain}}.png"/>
+                    <img ng-if="cell.tempTerrain" ng-src="/images/terrain/{{cell.tempTerrain}}.png"/>
+                    <img ng-if="cell.center" ng-src="/images/terrain/gold.png"/>
+                    <div class="nodrag"></div>
+                </div>
+                <div class="sprite fullsize" ng-if="cell.sprite">
+                    <img ng-if="cell.sprite" ng-src="/images/sprites/{{cell.sprite}}-{{game.colors[cell.player]}}.png"/>
+                    <img ng-if="cell.noPower" class="no-power-overlay" ng-src="/images/overlays/nopower.png"/>
+                    <div class="nodrag" ng-if="cell.player !== game.player"></div>
+                </div>
+                <div class="overlay fullsize" ng-if="cell.overlay || cell.tempOverlay">
+                    <img src="/images/overlays/destroy.png" ng-if="cell.overlay == 'destroy' || cell.tempOverlay == 'destroy'"/>
+                    <img ng-if="cell.overlay == 'move'" ng-src="/images/overlays/move.png" ng-class="'move-' + cell.moveDirection"/>
+                </div>
+                <span class="coords" ng-if="game.showCoords">{{cell.position}}</span>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <h4>Players</h4>
+            <ul class="list-group" style="font-weight: bold">
+                <li ng-repeat="player in game.players track by $index"
+                    class="list-group-item" style="color: {{game.playerColors[$index]}}"
+                    ng-class="{
+                        'player-dead': !game.playerStatus[$index],
+                        'player-muted': game.player != $index
+                    }"
+                    ng-if="player !== null"
+                    ng-click="game.setPlayer($index)">{{player}}</li>
+            </ul>
+            <h4>Moves</h4>
+            <div class="moves">
+                <div class="list-group" ng-mouseleave="game.lastMove = game.moves.length - 1; game.redraw()">
+                    <a class="list-group-item" ng-repeat="move in game.moves | reverse track by $index"
+                    ng-class="{future: $index < game.moves.length - game.lastMove - 2}"
+                    ng-mouseover="game.lastMove = game.moves.length - $index - 2; game.redraw()"
+                    ng-if="move[0] != '~'">
+                        {{move | limitTo:12}}{{move.length > 12 ? '&hellip;' : ''}}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12 bottom-moves">
+            {{game.moves | moveList}}
+        </div>
+    </div>
+</div>
+<% endblock %>
