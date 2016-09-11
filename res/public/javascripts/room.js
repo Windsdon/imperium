@@ -471,7 +471,7 @@ imperium.controller('GameField', function($scope, $timeout) {
     this.playerColors = ["#f00", "#0a0", "#00f", "#cc0"];
     this.cells = {};
     this.base = {};
-    this.moves = [[makeMoveInit()].join(" ")];
+    this.moves = [];
     this.showCoords = true;
     this.colors = ["red", "green", "blue", "yellow"];
     this.sprites = ["king", "knight", "thief"];
@@ -484,11 +484,49 @@ imperium.controller('GameField', function($scope, $timeout) {
     this.player = 0;
 
     // player names, in the order RGBY
-    this.players = ["Windson", "Qdiz", "Nujaka", "Walker"];
+    this.players = [];
 
     // players alive status, in order
-    this.playerStatus = [true, true, true, true];
+    this.playerStatus = [];
 
+    // this client's player number
+    this.playerNumber = -1;
+
+    var url = "ws://" + window.location.hostname + "?room=" + roomID;
+    var ws = new WebSocketController(url, 'imperium');
+    this.ws = ws;
+
+    var self = this;
+
+    ws.events.on('connected', function() {
+        console.log("Connected to the websocket");
+    })
+
+    ws.events.on('players', function(data) {
+        console.log("Received player list", data);
+        $timeout(function() {
+            self.players = data;
+        });
+    });
+
+    ws.events.on('moves', function(data) {
+        console.log("Received moves", data);
+        $timeout(function() {
+            self.moves = data;
+            self.lastMove = self.moves.length - 1;
+            self.redraw();
+        });
+    });
+
+    ws.events.on('playerNumber', function(data) {
+        console.log("Received player number", data);
+        $timeout(function() {
+            self.playerNumber = data;
+            self.redraw();
+        });
+    });
+
+    // initial draw;
     for (var i = 0; i < 9 * 9; i++) {
         var k = resolvePosition(i);
         this.base[k] = {
@@ -510,6 +548,12 @@ imperium.controller('GameField', function($scope, $timeout) {
         this.player = r.state.player;
         this.playerStatus = r.state.players;
         this.won = r.state.won;
+        this.notYou = this.playerNumber !== null && this.player != this.playerNumber;
+
+        // it's not your turn!
+        if(this.notYou) {
+            return;
+        }
 
         if(!showLast && this.moveSource && !calculateMovementOptions(this.cells, this.moveSource, this.player)) {
             if(this.lastMoveSource) {
@@ -617,7 +661,8 @@ imperium.controller('GameField', function($scope, $timeout) {
             return;
         }
 
-        if(this.state == "move" && !this.cells[source].sprite) {
+        if(this.state == "move" && !this.cells[source].sprite
+            && this.lastMoveSource && dist(this.lastMoveSource, source, true) < 3) {
             return;
         }
 
@@ -648,6 +693,9 @@ imperium.controller('GameField', function($scope, $timeout) {
 
     this.addMove = function(move) {
         this.moves.push(move);
+        if(move[0] != '~') { // hue
+            ws.send('move', move);
+        }
         this.lastMove = this.moves.length - 1;
         this.redraw();
     }
@@ -707,6 +755,10 @@ imperium.controller('GameField', function($scope, $timeout) {
         } else {
             self.addMove(c.result);
         }
+    }
+
+    this.restart = function() {
+        ws.send('restart');
     }
 
     this.redraw();
