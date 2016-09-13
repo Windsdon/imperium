@@ -378,7 +378,7 @@ function resolve(board, moves, showLast) {
 function calculateMovementOptions(board, f, player) {
     var patterns = {
         knight: [[1, 0], [0, 1], [-1, 0], [0, -1]],
-        king: [[1, 0], [0, 1], [-1, 0], [0, -1]],
+        king: [[1, 0], [0, 1], [-1, 0], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]],
         thief: [[1, 1], [-1, -1], [1, -1], [-1, 1]]
     }
 
