@@ -31,6 +31,43 @@ body {
     user-select: none;
     -moz-user-select: none;
     -webkit-user-select: none;
+    position: relative;
+}
+
+.game-alerts {
+    min-height: 82px;
+}
+
+.game-victory {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.game-victory-container {
+    position: absolute;
+    text-align: center;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 20px;
+}
+
+.game-victory h1 {
+    font-family: 'VT323', monospace;
+    font-size: 100px;
+    text-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+    margin: 0;
+    padding: 0;
+}
+
+.game-victory h2 {
+    color: #fff;
+    padding: 0;
+    margin: 0;
 }
 
 .game-cell {
@@ -142,4 +179,9 @@ body {
 
 .player-muted {
     background-color: #eee;
+}
+
+.selectReward {
+    height: 50px;
+
 }

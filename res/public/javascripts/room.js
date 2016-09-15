@@ -120,9 +120,15 @@ var moveParsers = [
     }, { // move or win
         test: /^([a-z]+[0-9]+)([a-z]+[0-9]+)(#)?$/,
         proc: function(match, board, showLast) {
+            var middle = "e5";
+
             var f = match[1]; // from
             var t = match[2]; // to
             var won = !!match[3];
+
+            if(won) {
+                won = board[f].player;
+            }
 
             if(showLast) {
                 fadeAll(board);
@@ -157,9 +163,16 @@ var moveParsers = [
     }, { // capture or win
         test: /^([a-z]+\d+)([a-z]+\d+)!(#)?$/,
         proc: function(match, board, showLast) {
+            var middle = "e5";
+
             var f = match[1]; // from
             var t = match[2]; // to
             var won = !!match[3];
+
+            if(won) {
+                won = board[f].player;
+                console.log(match[0] + " makes " + won + " win");
+            }
 
             if(showLast) {
                 fadeAll(board);
@@ -191,13 +204,15 @@ var moveParsers = [
             }
         }
     }, { // power move
-        test: /^([a-z]+\d+)([a-z]+\d+)(!)?\*([a-z]+\d+)\$([a-z]+\d+)\+$/,
+        test: /^([a-z]+\d+)([a-z]+\d+)(!)?\*(?:([a-z]+\d+)\$)?(?:([a-z]+\d+)\+)?(?:([a-z]+\d+)%)?(~)?$/,
         proc: function(match, board, showLast) {
             var f = match[1]; // from
             var t = match[2]; // to
             var captured = !!match[3]; // captured?
             var d = match[4]; // destroy
             var p = match[5]; // tree
+            var up = match[6]; // remove tree
+            var extra = !!match[7]; // extra turn
 
             if(showLast) {
                 fadeAll(board);
@@ -212,15 +227,27 @@ var moveParsers = [
                     faded: false
                 });
 
-                board[d] = $.extend(board[d], {
-                    faded: false,
-                    overlay: "destroy"
-                });
+                if(d) {
+                    board[d] = $.extend(board[d], {
+                        faded: false,
+                        overlay: "destroy"
+                    });
+                }
 
-                board[p] = $.extend(board[p], {
-                    faded: false,
-                    terrain: "tree"
-                });
+                if(p) {
+                    board[p] = $.extend(board[p], {
+                        faded: false,
+                        terrain: "tree"
+                    });
+                }
+
+                if(up) {
+                    board[up] = $.extend(board[up], {
+                        faded: false,
+                        terrain: "tree-cut"
+                    });
+                }
+
             } else {
                 board[t] = $.extend(board[t], {
                     sprite: board[f].sprite,
@@ -233,26 +260,41 @@ var moveParsers = [
                     player: null
                 });
 
-                board[d] = $.extend(board[d], {
-                    sprite: null,
-                    player: null
-                });
+                if(d) {
+                    board[d] = $.extend(board[d], {
+                        sprite: null,
+                        player: null
+                    });
+                }
 
-                board[p] = $.extend(board[p], {
-                    terrain: "tree"
-                });
+                if(p) {
+                    board[p] = $.extend(board[p], {
+                        terrain: "tree"
+                    });
+                }
+
+                if(up) {
+                    board[up] = $.extend(board[up], {
+                        terrain: null
+                    });
+                }
             }
 
             return {
-                nextPlayer: true
+                nextPlayer: !extra
             }
         }
     }, { // eliminate
-        test: /^([a-z]+\d+)([a-z]+\d+)!-?$/,
+        test: /^([a-z]+\d+)([a-z]+\d+)!-(#)?$/,
         proc: function(match, board, showLast) {
             var f = match[1]; // from
             var t = match[2]; // to
             var k = board[t].player; // player killed
+            var won = !!match[3];
+
+            if(won) {
+                won = board[f].player;
+            }
 
             if(showLast) {
                 fadeAll(board);
@@ -300,7 +342,8 @@ var moveParsers = [
 
             return {
                 setPlayerStatus: ps,
-                nextPlayer: true
+                nextPlayer: true,
+                won: won
             }
         }
     }
@@ -358,6 +401,10 @@ function resolve(board, moves, showLast) {
                         won = player;
                     }
                 }
+
+                if(results.won !== false && results.won !== undefined) {
+                    won = results.won;
+                }
             }
         });
     });
@@ -407,6 +454,19 @@ function calculateMovementOptions(board, f, player) {
             dd.result = f + d + "!";
             if(dd.sprite == "king") {
                 dd.result += "-";
+
+                // calculate victory by elimination
+                var players = [false, false, false, false];
+                for(var i in board) {
+                    // add kings but not the one being killed
+                    if(board[i].sprite == "king" && i != d) {
+                        players[board[i].player] = true;
+                    }
+                }
+
+                if(players.filter(p => p).length == 1) {
+                    dd.result += "#";
+                }
             }
         } else {
             dd.overlay = "move";
@@ -480,6 +540,8 @@ imperium.controller('GameField', function($scope, $timeout) {
     this.moveSource = null;
     this.lastMoveSource = null;
 
+    this.isOwner = false;
+
     // the current player
     this.player = 0;
 
@@ -518,10 +580,19 @@ imperium.controller('GameField', function($scope, $timeout) {
         });
     });
 
-    ws.events.on('playerNumber', function(data) {
-        console.log("Received player number", data);
+    ws.events.on('selfInfo', function(data) {
+        console.log("Received self info", data);
         $timeout(function() {
-            self.playerNumber = data;
+            self.playerNumber = data.number;
+            self.isOwner = data.owner;
+            self.redraw();
+        });
+    });
+
+    ws.events.on('restart', function(data) {
+        console.log("restart");
+        $timeout(function() {
+            self.notYou = null;
             self.redraw();
         });
     });
@@ -542,45 +613,84 @@ imperium.controller('GameField', function($scope, $timeout) {
     }
 
     this.redraw = function(nodrags) {
+        var self = this;
         var showLast = this.lastMove != (this.moves.length - 1);
         var r = resolve(this.base, this.moves.slice(0, this.lastMove + 2), showLast);
         this.cells = r.board;
         this.player = r.state.player;
         this.playerStatus = r.state.players;
         this.won = r.state.won;
-        this.notYou = this.playerNumber !== null && this.player != this.playerNumber;
+
+        if(showLast) {
+            // just to make rendering nicer
+            this.hideWon = true;
+        }
+
+        if(this.won !== false) {
+            console.log(this.won, "won the game");
+            // this needs to be called after the update cycles
+            // because the previous updates may still be processing
+            $timeout(function functionName() {
+                self.destroyDrags();
+            });
+            return;
+        }
+
+        if(!showLast || this.notYou === null) {
+            this.notYou = this.playerNumber !== null && this.player != this.playerNumber;
+        }
+
+        var middle = "e5";
 
         // it's not your turn!
         if(this.notYou) {
             return;
         }
 
-        if(!showLast && this.moveSource && !calculateMovementOptions(this.cells, this.moveSource, this.player)) {
-            if(this.lastMoveSource) {
-                var cells2 = $.extend(true, {}, this.cells);
-                calculateMovementOptions(cells2, this.lastMoveSource, this.player);
-                if(cells2[this.moveSource].overlay) {
-                    this.cells = cells2;
+        if(this.state == "move") {
+            if(!showLast && this.moveSource && !calculateMovementOptions(this.cells, this.moveSource, this.player)) {
+                if(this.lastMoveSource) {
+                    // handle persitent move ui
+                    var cells2 = $.extend(true, {}, this.cells);
+                    calculateMovementOptions(cells2, this.lastMoveSource, this.player);
+                    if(cells2[this.moveSource].overlay) {
+                        this.cells = cells2;
+                    }
                 }
             }
         }
 
         if(this.killCursor) {
-            this.cells[this.killCursor] = $.extend(this.cells[this.killCursor], {
-                tempOverlay: "destroy"
-            })
+            var at = this.cells[this.killCursor];
+            if(at.sprite && at.sprite != "king") {
+                this.cells[this.killCursor] = $.extend(at, {
+                    tempOverlay: "destroy"
+                });
+            }
         }
 
         if(this.treeCursor) {
-            this.cells[this.treeCursor] = $.extend(this.cells[this.treeCursor], {
-                tempTerrain: "tree"
-            })
+            var at = this.cells[this.treeCursor];
+            if(at.terrain == null && this.treeCursor != middle) {
+                this.cells[this.treeCursor] = $.extend(at, {
+                    tempTerrain: "tree"
+                });
+            }
+        }
+
+        if(this.treeCutCursor) {
+            var at = this.cells[this.treeCutCursor];
+            if(at.terrain == "tree") {
+                this.cells[this.treeCutCursor] = $.extend(at, {
+                    tempTerrain: "tree-cut"
+                });
+            }
         }
 
         if(nodrags || this.state != "move") {
             return;
         }
-        var self = this;
+
         $timeout(function() {
             self.prepareDrags();
         });
@@ -679,6 +789,9 @@ imperium.controller('GameField', function($scope, $timeout) {
             case "pmtree":
                 this.treeCursor = source;
                 break;
+            case "pmtreecut":
+                this.treeCutCursor = source;
+                break;
             default:
                 return;
         }
@@ -714,9 +827,48 @@ imperium.controller('GameField', function($scope, $timeout) {
             case "pmtree":
                 this.treeCallback(cell);
                 break;
+            case "pmtreecut":
+                this.treeCutCallback(cell);
+                break;
             default:
                 return;
         }
+    }
+
+    this.resolvePowerMove = function(c, type, at) {
+        var self = this;
+
+        self.treeCursor = false;
+        self.treeCutCursor = false;
+        self.killCursor = false;
+
+        self.state = "move";
+
+        // remove the temporary movement
+        self.moves.pop();
+
+        switch (type) {
+            case "pmkill":
+                self.addMove(c.result.substring(1) + "*" + at + "$");
+                break;
+            case "pmtree":
+                self.addMove(c.result.substring(1) + "*" + at + "+");
+                break;
+            case "pmtreecut":
+                self.addMove(c.result.substring(1) + "*" + at + "%");
+                break;
+            case "pmextra":
+                self.addMove(c.result.substring(1) + "*~");
+                break;
+        }
+    }
+
+    this.selectPowerMove = function(type) {
+        if(!this.powerMoveCallback) {
+            console.error("No power move callback!");
+            return;
+        }
+        this.powerMoveCallback(type);
     }
 
     this.handleDrop = function(c) {
@@ -724,34 +876,54 @@ imperium.controller('GameField', function($scope, $timeout) {
         var middle = "e5";
         this.destroyDrags();
         if(c.power) {
-            self.state = "pmkill";
+            this.state = "pmselect";
+
+            // add temporary move
             self.addMove(c.result);
-            var kill = null;
-            self.killCallback = function(k) {
-                kill = k;
-                k = self.cells[k];
-                if(!k.sprite || k.sprite == "king") {
+
+            // this callback should be called on an angular loop
+            this.powerMoveCallback = function(type) {
+                if(type == "pmextra") {
+                    this.resolvePowerMove(c, "pmextra");
                     return;
                 }
-                $timeout(function() {
-                    self.state = "pmtree";
-                });
-            }
-            self.treeCallback = function(tree) {
-                var t = self.cells[tree];
-                if(!t.sprite || t.player != self.player ||  tree == middle || t.terrain) {
-                    return;
+                // set state
+                self.state = type;
+
+                self.killCallback = function(k) {
+                    var at = k;
+                    k = self.cells[k];
+
+                    if(!k.sprite || k.sprite == "king") {
+                        return;
+                    }
+
+                    self.resolvePowerMove(c, self.state, at);
                 }
-                self.state = "move";
-                self.treeCursor = false;
-                self.killCursor = false;
-                $timeout(function() {
-                    // remove the temporary movement
-                    self.moves.pop();
-                    // push the correct move
-                    self.addMove(c.result.substring(1) + "*" + kill + "$" + tree + "+");
-                });
+
+                self.treeCallback = function(tree) {
+                    var at = tree;
+                    var t = self.cells[tree];
+
+                    if(tree == middle || t.terrain) {
+                        return;
+                    }
+
+                    self.resolvePowerMove(c, self.state, at);
+                }
+
+                self.treeCutCallback = function(tree) {
+                    var at = tree;
+                    var t = self.cells[tree];
+
+                    if(t.terrain !== "tree") {
+                        return;
+                    }
+
+                    self.resolvePowerMove(c, self.state, at);
+                }
             }
+
         } else {
             self.addMove(c.result);
         }

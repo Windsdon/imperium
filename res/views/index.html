@@ -60,7 +60,7 @@
                         <div class="caption">
                             <h3>King</h3>
                             <p>
-                                Kings move like warriors
+                                Kings move in any direction
                             </p>
                         </div>
                     </div>
@@ -85,7 +85,7 @@
                         <div class="caption">
                             <p>
                                 <h3>Terrain</h3>
-                                You cannot move or attack into tree tiles.
+                                You cannot move or attack into tree tiles or allied units
                             </p>
                         </div>
                     </div>
@@ -95,15 +95,28 @@
             <h3>Power Moves</h3>
             <p>
                 Whenever one of your units (but not your king!) gets into the golden
-                square, you can perform a power move. First, you select one enemy unity
-                to destroy. You can't destroy kings, of course! Next, you select an
-                allied unit and place a tree under it. This unit is now invulnerable
-                to attacks, but can still attack. <b>If you move, you cannot go back
-                on top of the tree!</b>
+                square, you can perform a power move. Select <b>only one</b> from the list
+                bellow.
             </p>
             <p>
-                <b>Each unit can only activate this power once!</b> They gain a small
+                <b>Each unit can activate this power only once!</b> They gain a small
                 white circle on the top left to show they can't activate it again.
+            </p>
+            <h4>Kill Unity</h4>
+            <p>
+                You can kill any unit in the game, except for kings.
+            </p>
+            <h4>Plant Tree</h4>
+            <p>
+                You can plant a tree anywhere on the map, except for the middle.
+            </p>
+            <h4>Remove Tree</h4>
+            <p>
+                You can remove any tree on the map.
+            </p>
+            <h4>Extra turn</h4>
+            <p>
+                You can play again immediately!
             </p>
 
             <h3>Eliminating</h3>
@@ -119,16 +132,24 @@
             </p>
 
             <h3>Notation</h3>
+            <i>Note: you don't have to memorize this</i>
             <p>
                 While playing, the game will display the moves in this notation:
             </p>
             <p>
                 <b>Normal moves:</b> <code>c3d2</code><br>
                 <b>Captures:</b> <code>c3d2!</code><br>
-                <b>Power moves:</b> <code>e4e5*a2$e3+</code> (move to, kill, create tree)<br>
-                <b>Power moves (with capture):</b> <code>e4e5!*a2$e3+</code> (capture, kill, create tree)<br>
+                <b>Power moves:</b>
+                <ul>
+                    <li>Kill: <code>e4e5*a2$</code></li>
+                    <li>Plant tree: <code>e4e5*e3+</code></li>
+                    <li>Remove tree: <code>e4e5*a2%</code></li>
+                    <li>Extra turn: <code>e4e5*~</code></li>
+                </ul>
+                <b>Power moves (with capture):</b> <code>e4e5!*...</code><br>
                 <b>Elimination:</b> <code>c3d2!-</code><br>
                 <b>Win:</b> <code>e4e5#</code><br>
+                <b>Elimination win:</b> <code>c3d2!-#</code><br>
             </p>
             <p>
                 This is the full board state notation: <code>@a1:k1 @a2:t1 @b2:w1 @d3+ @e8+</code><br>
@@ -137,6 +158,19 @@
 
                 The first three describe unit location: k = king, t = thief, w = warrior, followed by the unit's owner (1-based).
                 Next is a list of trees.
+            </p>
+            <h2>How it works</h2>
+            <p>
+                The game keeps track of a list of moves. The first set is sent
+                by the server and initializes trees and units. The server also
+                sends you your player number.
+                After that, the clients calculate the board state incrementally
+                and let you move if it's your turn. The movements are sent back
+                to the server and broadcasted to all other players.
+            </p>
+            <p>
+                <b>There is no server-side validation!</b> You shouldn't play this
+                with people you don't trust, because they can cheat ;)
             </p>
         </div>
     </div>

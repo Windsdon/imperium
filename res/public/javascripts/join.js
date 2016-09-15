@@ -8,6 +8,7 @@ imperium.controller('Lobby', function($scope, $timeout) {
     this.players = [];
     this.role = "spectator";
     this.ws = ws;
+    this.owner = false;
 
     var self = this;
 
@@ -25,6 +26,11 @@ imperium.controller('Lobby', function($scope, $timeout) {
     ws.events.on('start', function(data) {
         console.log("Received start");
         window.location = "/room/" + roomID;
+    });
+
+    ws.events.on('selfInfo', function(data) {
+        console.log("Received self info", data);
+        self.isOwner = data.owner;
     });
 
     this.changeRole = function() {

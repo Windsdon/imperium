@@ -15,6 +15,23 @@
 
 <% block content %>
 <div class="container" ng-controller="GameField as game">
+    <div class="row game-alerts">
+        <div class="alert alert-info" ng-if="game.state == 'pmselect'">
+            Select Power Move:
+            <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-default" ng-click="game.selectPowerMove('pmkill')">Kill Enemy</button>
+                <button type="button" class="btn btn-default" ng-click="game.selectPowerMove('pmtree')">Plant Tree</button>
+                <button type="button" class="btn btn-default" ng-click="game.selectPowerMove('pmtreecut')">Cut Tree</button>
+                <button type="button" class="btn btn-default" ng-click="game.selectPowerMove('pmextra')">Extra Turn</button>
+            </div>
+        </div>
+        <div class="alert alert-info" ng-if="game.state == 'pmkill'">Power Move: Select an enemy to kill</div>
+        <div class="alert alert-info" ng-if="game.state == 'pmtree'">Power Move: Select a location to plant a tree</div>
+        <div class="alert alert-info" ng-if="game.state == 'pmtreecut'">Power Move: Select a tree to cut</div>
+        <div class="alert alert-warning" ng-if="game.notYou && game.won === false">Currently playing: <b>{{game.players[game.player].name}}</b></div>
+        <div class="alert alert-success" ng-if="!game.notYou && game.state == 'move'">It's your turn!</div>
+        <div class="alert alert-danger" ng-if="game.won !== false">Game Over!</div>
+    </div>
     <div class="row">
         <div class="col-md-10 game-field">
             <div class="game-cell" id="cell-{{cell.position}}" ng-repeat="cell in game.cells" ng-class="{
@@ -22,8 +39,9 @@
                 'droppable': cell.validDrop
             }" ng-class-even="'color-even'" ng-class-odd="'color-odd'" ng-mouseover="game.mouseOver(cell.position)"
             ng-click="game.handleClick(cell.position)" data-pos="{{cell.position}}">
+                <span class="coords" ng-if="game.showCoords">{{cell.position}}</span>
                 <div class="terrain fullsize">
-                    <img ng-if="cell.terrain" ng-src="/images/terrain/{{cell.terrain}}.png"/>
+                    <img ng-if="cell.terrain && !cell.tempTerrain" ng-src="/images/terrain/{{cell.terrain}}.png"/>
                     <img ng-if="cell.tempTerrain" ng-src="/images/terrain/{{cell.tempTerrain}}.png"/>
                     <img ng-if="cell.center" ng-src="/images/terrain/gold.png"/>
                     <div class="nodrag"></div>
@@ -37,15 +55,21 @@
                     <img src="/images/overlays/destroy.png" ng-if="cell.overlay == 'destroy' || cell.tempOverlay == 'destroy'"/>
                     <img ng-if="cell.overlay == 'move'" ng-src="/images/overlays/move.png" ng-class="'move-' + cell.moveDirection"/>
                 </div>
-                <span class="coords" ng-if="game.showCoords">{{cell.position}}</span>
+            </div>
+            <div class="game-victory" ng-if="game.won !== false">
+                <div class="game-victory-container">
+                    <h1 style="color: {{game.playerColors[game.won]}}">{{game.players[game.won].name}}</h1>
+                    <h2>wins!</h2>
+                </div>
             </div>
         </div>
         <div class="col-md-2">
-            <div class="btn-group btn-group-justified">
+            <div class="btn-group btn-group-justified" ng-if="game.isOwner">
                 <div class="btn-group">
                     <button type="button" class="btn btn-danger" ng-click="game.restart()">Restart</button>
                 </div>
             </div>
+
             <h4>Players</h4>
             <ul class="list-group" style="font-weight: bold">
                 <li ng-repeat="player in game.players track by $index"
@@ -55,7 +79,12 @@
                         'player-muted': game.player != $index
                     }"
                     ng-if="player !== null"
-                    ng-click="game.setPlayer($index)">{{player}}</li>
+                    ng-click="game.setPlayer($index)">
+                    <span class="badge" ng-repeat="badge in player.badges">
+                        <span class="glyphicon glyphicon-{{badge.fa}}"></span>
+                    </span>
+                    {{player.name}}
+                </li>
             </ul>
             <h4>Moves</h4>
             <div class="moves">

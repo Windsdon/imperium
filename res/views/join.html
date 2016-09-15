@@ -29,14 +29,19 @@
         <div class="col-sm-4">
             <h4>Players</h4>
             <ul class="list-group" ng-if="lobby.players.length > 0">
-                <li class="list-group-item" ng-repeat="player in lobby.players">{{player}}</li>
+                <li class="list-group-item" ng-repeat="player in lobby.players track by $index">
+                    <span class="badge" ng-repeat="badge in player.badges">
+                        <span class="glyphicon glyphicon-{{badge.fa}}"></span>
+                    </span>
+                    {{player.name}}
+                </li>
             </ul>
             <div class="btn-group btn-group-justified">
                 <div class="btn-group">
                     <button type="button" class="btn btn-default" ng-click="lobby.changeRole()">Join</button>
                 </div>
 
-                <div class="btn-group">
+                <div class="btn-group" ng-if="lobby.isOwner">
                     <button type="button" class="btn" ng-click="lobby.startGame()"
                         ng-class="{
                             'btn-success': lobby.canStart(),
